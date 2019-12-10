@@ -1,4 +1,4 @@
-# CMPB_macros_jointfrailty
+# Overview
 
 Supplementary material for the publication of Gerrit Toenges and Antje Jahn-Eimermacher (2019): Computational issues in fitting joint frailty models for recurrent events with an associated terminal event, *Computer Methods and Programs in Biomedicine*. 
 
