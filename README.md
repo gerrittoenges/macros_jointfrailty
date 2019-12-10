@@ -1,6 +1,6 @@
 # Overview
 
-Supplementary material for the publication of Gerrit Toenges and Antje Jahn-Eimermacher (2019): Computational issues in fitting joint frailty models for recurrent events with an associated terminal event, *Computer Methods and Programs in Biomedicine*. 
+Supplementary material for the publication of Gerrit Toenges and Antje Jahn-Eimermacher (2019): Computational issues in fitting joint frailty models for recurrent events with an associated terminal event, *Computer Methods and Programs in Biomedicine*, https://doi.org/10.1016/j.cmpb.2019.105259. 
 
 The supplementary material contains SAS-macros for the generation and analysis of joint frailty data, along with comprehensive manuals.  
 
