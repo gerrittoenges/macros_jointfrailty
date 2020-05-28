@@ -1,3 +1,4 @@
+
 /*############################################# Macro for Joint-Frailty-Analysis ###############################################
 ################################################################################################################################*/
 
@@ -64,35 +65,44 @@
 			run;
 			%end;
 
+		/* Determine the largest Follow-up time */
+		proc univariate data=&input._for_JointFrailty noprint;
+			by sampleID_temp_;
+			var &timevar;
+			output out=maxval max=max;
+		run;
+
 		/* Obtain quantiles for recurrent events */
 		proc univariate data=&input._for_JointFrailty(where=(&eventindicatorvar=1)) noprint;
 			by sampleID_temp_;
 			var &timevar;
-			output out=quant_r pctlpts= 10 20 30 40 50 60 70 80 90 100 pctlpre=qr;
+			output out=quant_r pctlpts= 10 20 30 40 50 60 70 80 90 pctlpre=qr;
 		run;
 		data quant_r;
-			retain sampleID_temp_ qr0 qr10 qr20 qr30 qr40 qr50 qr60 qr70 qr80 qr90 qr100;
-			rename  qr10=qr1 qr20=qr2 qr30=qr3 qr40=qr4 qr50=qr5 qr60=qr6 qr70=qr7 qr80=qr8 qr90=qr9 qr100=qr10;
+			retain sampleID_temp_ qr0 qr10 qr20 qr30 qr40 qr50 qr60 qr70 qr80 qr90 max;
+			merge quant_r maxval;
+			by sampleID_temp_;
+			rename  qr10=qr1 qr20=qr2 qr30=qr3 qr40=qr4 qr50=qr5 qr60=qr6 qr70=qr7 qr80=qr8 qr90=qr9 max=qr10;
 			qr0=0;
-			set quant_r;
-			label qr10=' ' qr20=' ' qr30=' ' qr40=' ' qr50=' ' qr60=' ' qr70=' ' qr80=' ' qr90=' ' qr100=' ';
-		run;	/* The 0-Quantile becomes defined as 0, the 100-Quantile ist the latest recurrent event time */
+			label qr10=' ' qr20=' ' qr30=' ' qr40=' ' qr50=' ' qr60=' ' qr70=' ' qr80=' ' qr90=' ' max=' ';
+		run;	/* qr0 is 0, qr10 is the largest follow-up time, qr1-qr9 are the 10%,...,90%-quantiles of recurrent events */
 
 		/* Obtain quantiles for death */
 		proc univariate data=&input._for_JointFrailty(where=(&eventindicatorvar=2)) noprint;
 			by sampleID_temp_;
 			var &timevar;
-			output out=quant_d pctlpts= 10 20 30 40 50 60 70 80 90 100 pctlpre=qd;
+			output out=quant_d pctlpts= 10 20 30 40 50 60 70 80 90 pctlpre=qd;
 		run;
 		data quant_d;
-			retain sampleID_temp_ qd0 qd10 qd20 qd30 qd40 qd50 qd60 qd70 qd80 qd90 qd100;
-			rename  qd10=qd1 qd20=qd2 qd30=qd3 qd40=qd4 qd50=qd5 qd60=qd6 qd70=qd7 qd80=qd8 qd90=qd9 qd100=qd10;
+			retain sampleID_temp_ qd0 qd10 qd20 qd30 qd40 qd50 qd60 qd70 qd80 qd90 max;
+			merge quant_d maxval;
+			by sampleID_temp_;
+			rename  qd10=qd1 qd20=qd2 qd30=qd3 qd40=qd4 qd50=qd5 qd60=qd6 qd70=qd7 qd80=qd8 qd90=qd9 max=qd10;
 			qd0=0;
-			set quant_d;
-			label qd10=' ' qd20=' ' qd30=' ' qd40=' ' qd50=' ' qd60=' ' qd70=' ' qd80=' ' qd90=' ' qd100=' ';
-		run;		/* The 0-Quantile becomes defined as 0, the 100-Quantile ist the latest terminal event time */
+			label qd10=' ' qd20=' ' qd30=' ' qd40=' ' qd50=' ' qd60=' ' qd70=' ' qd80=' ' qd90=' ' max=' ';
+		run;	/* qd0 is 0, qd10 is the largest follow-up time, qd1-qd9 are the 10%,...,90%-quantiles of death events */
 			
-		/* Calculate the duration in each quantile interval and the indicator of event in each interval */
+		/* Calculate the duration in each interval and the indicator of event in each interval */
 		data &input._for_JointFrailty;
 			merge &input._for_JointFrailty quant_r quant_d;
 			by sampleID_temp_;
@@ -133,24 +143,24 @@
 						if &timevar <= (1/1000000)*ceil(1000000*quant_d{i}) then 
 							do;
 			                	event_d{i-1}=(&eventindicatorvar=2); /* censoring: all event_d-Variables are 0; terminal event: only one event_d-Variable is 1 */
-			                	dur_d{i-1}=&timevar-quant_d{i-1};    /* censoring and terminal event: dur_d-Variables are filled up to the drop-out-time */
-			                	i=11;
+			                	dur_d{i-1}=&timevar-quant_d{i-1};    /* censoring and terminal event: Only the dur_d-Variable of the interval that contains the (censoring/terminal) event time gets a duration-entry */
+			                	i=11;								
 			            	end;
-			            else dur_d{i-1}=quant_d{i}-quant_d{i-1};
+			            else dur_d{i-1}=quant_d{i}-quant_d{i-1}; /* censoring and terminal event: All dur_d-Variables of intervals preceding the interval that contains the (censoring/terminal) event time get a duration-entry */
 					end;
 					do i=2 to 11;
 						if &timevar <= (1/1000000)*ceil(1000000*quant_r{i}) then              
 							do;
-			                	dur_r{i-1}=&timevar-quant_r{i-1}; /* censoring and terminal event: dur_r-Variables are filled up to the drop-out-time */
+			                	dur_r{i-1}=&timevar-quant_r{i-1}; /* censoring and terminal event: Only the dur_r-Variable of the interval that contains the (censoring/terminal) event time gets a duration-entry */
 			                	i=11;
 			            	end;
-						else dur_r{i-1}=quant_r{i}-quant_r{i-1};
+						else dur_r{i-1}=quant_r{i}-quant_r{i-1}; /* censoring and terminal event: All dur_r-Variables of intervals preceding the interval that contains the (censoring/terminal) event time get a duration-entry */
 					end;
 				end;
 		run;
 
 		proc datasets;
-	   		delete quant_r quant_d;
+	   		delete quant_r quant_d maxval;
 		quit;
 
 		%end;
