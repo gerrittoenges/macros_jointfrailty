@@ -4,7 +4,7 @@ Supplementary material for the publication of Gerrit Toenges and Antje Jahn-Eime
 
 The supplementary material contains SAS-macros for the generation and analysis of joint frailty data, along with comprehensive manuals.  
 
-- The SAS-file "Macro Joint Frailty" allows to fit various parametric joint frailty models and is documented in the pdf-file "Macro Joint Frailty Manual"  
-- The SAS-file "Macro Simulation" allows to generate datasets from a joint frailty model and is documented in the pdf-file "Macro Simulation Manual" 
+- The SAS-file "Macro Joint Frailty" allows to fit various parametric joint frailty models and is documented in the pdf-file "Macro Joint Frailty Manual".
+- The SAS-file "Macro Simulation" allows to generate datasets from a joint frailty model and is documented in the pdf-file "Macro Simulation Manual".
 
 In case of problems, please contact gtoenges@uni-mainz.de.
